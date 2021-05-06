@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Threading;
+using Content.Shared.GameObjects.Components.Body;
+using Content.Shared.GameObjects.Components.Body.Part;
 using Content.Shared.GameObjects.Components.Surgery;
 using Content.Shared.GameObjects.Components.Surgery.Operation;
 using Content.Shared.GameObjects.Components.Surgery.Operation.Messages;
@@ -130,7 +132,48 @@ namespace Content.Shared.GameObjects.EntitySystems
 
         public bool IsPerformingSurgeryOn(SurgeonComponent surgeon, SurgeryTargetComponent target)
         {
-            return surgeon.Target == target;
+            if (surgeon.Target == target)
+            {
+                return true;
+            }
+
+            if (target.Owner.TryGetComponent(out IBodyPart? part) &&
+                part.Body?.Owner == target.Owner)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool IsPerformingSurgeryOnSelf(SurgeonComponent surgeon)
+        {
+            return surgeon.Target != null && IsPerformingSurgeryOn(surgeon, surgeon.Target);
+        }
+
+        public IEntity GetPopupReceiver(SurgeryTargetComponent target)
+        {
+            if (target.Owner.TryGetComponent(out IBodyPart? part) &&
+                part.Body?.Owner != null)
+            {
+                return part.Body.Owner;
+            }
+
+            return target.Owner;
+        }
+
+        public bool IsReceivingSurgeryOnPart(IEntity target)
+        {
+            return IsReceivingSurgeryOnPart(target, out _, out _);
+        }
+
+        public bool IsReceivingSurgeryOnPart(
+            IEntity target,
+            [NotNullWhen(true)] out IBodyPart? part,
+            [NotNullWhen(true)] out IBody? body)
+        {
+            body = null;
+            return target.TryGetComponent(out part) && (body = part.Body) != null;
         }
 
         /// <summary>

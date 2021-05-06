@@ -12,17 +12,19 @@ namespace Content.Server.GameObjects.Components.Surgery.Tool.Behaviors
 {
     public class Cauterization : ISurgeryBehavior
     {
+        private SharedSurgerySystem SurgerySystem => EntitySystem.Get<SharedSurgerySystem>();
+
         [DataField("locId")]
         private string? LocId { get; } = null;
 
         public bool CanPerform(SurgeonComponent surgeon, SurgeryTargetComponent target)
         {
-            return EntitySystem.Get<SharedSurgerySystem>().IsPerformingSurgeryOn(surgeon, target);
+            return SurgerySystem.IsPerformingSurgeryOn(surgeon, target);
         }
 
         public bool Perform(SurgeonComponent surgeon, SurgeryTargetComponent target)
         {
-            return EntitySystem.Get<SharedSurgerySystem>().StopSurgery(surgeon, target);
+            return SurgerySystem.StopSurgery(surgeon, target);
         }
 
         public void OnPerformDelayBegin(SurgeonComponent surgeon, SurgeryTargetComponent target)
@@ -33,16 +35,16 @@ namespace Content.Server.GameObjects.Components.Surgery.Tool.Behaviors
             }
 
             var surgeonOwner = surgeon.Owner;
-            var bodyOwner = target.Owner.GetComponentOrNull<IBodyPart>()?.Body?.Owner ?? target.Owner;
+            var targetReceiver = EntitySystem.Get<SharedSurgerySystem>().GetPopupReceiver(target);
 
-            surgeonOwner.PopupMessage(SurgeryStepPrototype.SurgeonBeginPopup(surgeonOwner, bodyOwner, target.Owner, LocId));
+            surgeonOwner.PopupMessage(SurgeryStepPrototype.SurgeonBeginPopup(surgeonOwner, targetReceiver, target.Owner, LocId));
 
-            if (bodyOwner != surgeonOwner)
+            if (!SurgerySystem.IsPerformingSurgeryOnSelf(surgeon))
             {
-                bodyOwner.PopupMessage(SurgeryStepPrototype.TargetBeginPopup(surgeonOwner, bodyOwner, LocId));
+                targetReceiver.PopupMessage(SurgeryStepPrototype.TargetBeginPopup(surgeonOwner, target.Owner, LocId));
             }
 
-            surgeonOwner.PopupMessageOtherClients(SurgeryStepPrototype.OutsiderBeginPopup(surgeonOwner, bodyOwner, target.Owner, LocId), except: bodyOwner);
+            surgeonOwner.PopupMessageOtherClients(SurgeryStepPrototype.OutsiderBeginPopup(surgeonOwner, targetReceiver, target.Owner, LocId), except: targetReceiver);
         }
 
         public void OnPerformSuccess(SurgeonComponent surgeon, SurgeryTargetComponent target)
