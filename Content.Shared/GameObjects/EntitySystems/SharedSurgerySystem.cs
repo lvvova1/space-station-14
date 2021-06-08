@@ -12,6 +12,7 @@ using Content.Shared.GameObjects.Components.Surgery.Target;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared.GameObjects.EntitySystems
@@ -23,13 +24,18 @@ namespace Content.Shared.GameObjects.EntitySystems
 
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
+        protected ISawmill Sawmill { get; private set; } = default!;
+
         public override void Initialize()
         {
             base.Initialize();
 
+            Sawmill = Logger.GetSawmill(SurgeryLogId);
+
             ValidateOperations();
 
             SubscribeLocalEvent<SurgeryTargetComponent, ComponentRemove>(HandleTargetComponentRemoved);
+
             SubscribeLocalEvent<SurgeonComponent, SurgeonStartedOperation>(HandleSurgeonStartedOperation);
             SubscribeLocalEvent<SurgeonComponent, SurgeonStoppedOperation>(HandleSurgeonStoppedOperation);
             SubscribeLocalEvent<SurgeryTargetComponent, OperationEnded>(HandleOperationEnded);
