@@ -43,7 +43,7 @@ namespace Content.Shared.GameObjects.Components.Surgery.Operation.Step.Serialize
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();
-            mapping.AddNode("id", node);
+            mapping.Add("id", node);
 
             return serializationManager.Read(typeof(OperationStep), mapping, context, skipHook);
         }

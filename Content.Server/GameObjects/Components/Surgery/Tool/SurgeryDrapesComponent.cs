@@ -325,13 +325,13 @@ namespace Content.Server.GameObjects.Components.Surgery.Tool
                 return true;
             }
 
-            if (!user.TryGetComponent(out IActorComponent? actor) ||
+            if (!user.TryGetComponent(out ActorComponent? actor) ||
                 !target.TryGetComponent(out IBody? body))
             {
                 return false;
             }
 
-            OpenUI(actor.playerSession);
+            OpenUI(actor.PlayerSession);
             UpdateUI(body);
 
             return true;
