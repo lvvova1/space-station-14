@@ -87,14 +87,14 @@ namespace Content.Server.GameObjects.Components.Body.Part
                     return;
                 }
 
-                if (!user.TryGetComponent(out IActorComponent? actor))
+                if (!user.TryGetComponent(out ActorComponent? actor))
                 {
                     return;
                 }
 
                 var groupController = IoCManager.Resolve<IConGroupController>();
 
-                if (!groupController.CanCommand(actor.playerSession, "attachbodypart"))
+                if (!groupController.CanCommand(actor.PlayerSession, "attachbodypart"))
                 {
                     return;
                 }
