@@ -1,12 +1,12 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Content.Server.GameObjects.Components.Surgery.Tool;
-using Content.Server.GameObjects.EntitySystems;
+using Content.Server.GameObjects.EntitySystems.Surgery.Events;
 using Content.Shared.GameObjects.Components.Surgery.Operation;
 using Content.Shared.GameObjects.Components.Surgery.Operation.Effect;
 using Content.Shared.GameObjects.Components.Surgery.Surgeon;
 using Content.Shared.GameObjects.Components.Surgery.Target;
-using Content.Shared.GameObjects.EntitySystems;
+using Content.Shared.GameObjects.EntitySystems.Surgery;
 using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.Player;

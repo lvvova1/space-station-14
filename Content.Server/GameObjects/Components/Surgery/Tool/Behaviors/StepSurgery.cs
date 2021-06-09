@@ -1,12 +1,14 @@
-﻿using Content.Server.Utility;
+﻿using Content.Server.GameObjects.EntitySystems.Surgery.Events.Popups;
 using Content.Shared.GameObjects.Components.Body.Part;
 using Content.Shared.GameObjects.Components.Surgery.Operation.Step;
 using Content.Shared.GameObjects.Components.Surgery.Surgeon;
 using Content.Shared.GameObjects.Components.Surgery.Target;
-using Content.Shared.GameObjects.EntitySystems;
+using Content.Shared.GameObjects.EntitySystems.Surgery.Events;
+using Content.Shared.GameObjects.EntitySystems.Surgery.Events.Popups;
 using Content.Shared.Interfaces;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
@@ -15,8 +17,6 @@ namespace Content.Server.GameObjects.Components.Surgery.Tool.Behaviors
 {
     public class StepSurgery : ISurgeryBehavior
     {
-        private SharedSurgerySystem SurgerySystem => EntitySystem.Get<SharedSurgerySystem>();
-
         [field: DataField("step", customTypeSerializer: typeof(PrototypeIdSerializer<SurgeryStepPrototype>))]
         private string? StepId { get; } = default;
 
@@ -26,7 +26,15 @@ namespace Content.Server.GameObjects.Components.Surgery.Tool.Behaviors
 
         public bool CanPerform(SurgeonComponent surgeon, SurgeryTargetComponent target)
         {
-            return StepId != null && SurgerySystem.CanAddSurgeryTag(target, StepId);
+            if (StepId == null)
+            {
+                return false;
+            }
+
+            var ev = new CheckCanAddSurgeryTagEvent(StepId);
+            target.Owner.EntityManager.EventBus.RaiseLocalEvent(target.Owner.Uid, ev);
+
+            return ev.CanAdd;
         }
 
         public bool Perform(SurgeonComponent surgeon, SurgeryTargetComponent target)
@@ -38,7 +46,10 @@ namespace Content.Server.GameObjects.Components.Surgery.Tool.Behaviors
                 return false;
             }
 
-            return SurgerySystem.TryAddSurgeryTag(target, step.ID);
+            var ev = new TryAddSurgeryTagEvent(step.ID);
+            target.Owner.EntityManager.EventBus.RaiseLocalEvent(target.Owner.Uid, ev);
+
+            return ev.Added;
         }
 
         public void OnPerformDelayBegin(SurgeonComponent surgeon, SurgeryTargetComponent target)
@@ -52,15 +63,19 @@ namespace Content.Server.GameObjects.Components.Surgery.Tool.Behaviors
 
             var surgeonOwner = surgeon.Owner;
             var bodyOwner = target.Owner.GetComponentOrNull<IBodyPart>()?.Body?.Owner ?? target.Owner;
+            var eventBus = target.Owner.EntityManager.EventBus;
 
-            surgeonOwner.PopupMessage(step.SurgeonBeginPopup(surgeonOwner, bodyOwner, target.Owner));
+            var surgeonPopup = new DoSurgeonBeginPopupEvent(surgeonOwner, bodyOwner, target.Owner, step.LocId);
+            eventBus.RaiseEvent(EventSource.Local, surgeonPopup);
 
             if (bodyOwner != surgeonOwner)
             {
-                bodyOwner.PopupMessage(step.TargetBeginPopup(surgeonOwner, bodyOwner));
+                var targetPopup = new DoTargetBeginPopupEvent(surgeonOwner, bodyOwner, step.LocId);
+                eventBus.RaiseEvent(EventSource.Local, targetPopup);
             }
 
-            surgeonOwner.PopupMessageOtherClients(step.OutsiderBeginPopup(surgeonOwner, bodyOwner, target.Owner), except: bodyOwner);
+            var outsiderPopup = new DoOutsiderBeginPopupEvent(surgeonOwner, bodyOwner, target.Owner, step.LocId);
+            eventBus.RaiseEvent(EventSource.Local, outsiderPopup);
         }
 
         public void OnPerformSuccess(SurgeonComponent surgeon, SurgeryTargetComponent target)
@@ -74,20 +89,24 @@ namespace Content.Server.GameObjects.Components.Surgery.Tool.Behaviors
 
             var surgeonOwner = surgeon.Owner;
             var bodyOwner = target.Owner.GetComponentOrNull<IBodyPart>()?.Body?.Owner ?? target.Owner;
+            var eventBus = target.Owner.EntityManager.EventBus;
 
-            surgeonOwner.PopupMessage(step.SurgeonSuccessPopup(surgeonOwner, bodyOwner, target.Owner));
+            var surgeonPopup = new DoSurgeonSuccessPopup(surgeonOwner, bodyOwner, target.Owner, step.LocId);
+            eventBus.RaiseEvent(EventSource.Local, surgeonPopup);
 
             if (bodyOwner != surgeonOwner)
             {
-                bodyOwner.PopupMessage(step.TargetSuccessPopup(surgeonOwner, bodyOwner));
+                var targetPopup = new DoTargetSuccessPopup(surgeonOwner, bodyOwner, step.LocId);
+                eventBus.RaiseEvent(EventSource.Local, targetPopup);
             }
 
-            surgeonOwner.PopupMessageOtherClients(step.OutsiderSuccessPopup(surgeonOwner, bodyOwner, target.Owner), except: bodyOwner);
+            var outsiderPopup = new DoOutsiderSuccessPopup(surgeonOwner, bodyOwner, target.Owner, step.LocId);
+            eventBus.RaiseEvent(EventSource.Local, outsiderPopup);
         }
 
         public void OnPerformFail(SurgeonComponent surgeon, SurgeryTargetComponent target)
         {
-            surgeon.Owner.PopupMessage("You see no useful way to do that.");
+            surgeon.Owner.PopupMessage(Loc.GetString("surgery-step-not-useful"));
         }
     }
 }

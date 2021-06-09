@@ -24,7 +24,12 @@ namespace Content.Server.Utility
         /// <param name="except">
         ///     An array of entities to not popup the message for.
         /// </param>
-        public static void PopupMessageOtherClients(this IEntity source, string message, IPlayerManager? playerManager = null, int range = 15, params IEntity[] except)
+        public static void PopupMessageOtherClients(
+            this IEntity source,
+            string message,
+            IPlayerManager? playerManager = null,
+            int range = 15,
+            params IEntity[] except)
         {
             playerManager ??= IoCManager.Resolve<IPlayerManager>();
 
@@ -58,7 +63,11 @@ namespace Content.Server.Utility
         /// <param name="range">
         ///     The range in which to search for players, defaulting to one screen.
         /// </param>
-        public static void PopupMessageEveryone(this IEntity source, string message, IPlayerManager? playerManager = null, int range = 15)
+        public static void PopupMessageEveryone(
+            this IEntity source,
+            string message,
+            IPlayerManager? playerManager = null,
+            int range = 15)
         {
             source.PopupMessage(message);
             source.PopupMessageOtherClients(message, playerManager, range);

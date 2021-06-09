@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using Content.Server.GameObjects.Components.Surgery.Tool;
+using Content.Server.GameObjects.EntitySystems.Surgery.Events;
+using Content.Server.GameObjects.EntitySystems.Surgery.Events.Popups;
 using Content.Server.Utility;
 using Content.Shared.GameObjects.Components.Body;
 using Content.Shared.GameObjects.Components.Body.Part;
@@ -7,20 +9,23 @@ using Content.Shared.GameObjects.Components.Surgery.Operation;
 using Content.Shared.GameObjects.Components.Surgery.Surgeon;
 using Content.Shared.GameObjects.Components.Surgery.Target;
 using Content.Shared.GameObjects.Components.Surgery.UI;
-using Content.Shared.GameObjects.EntitySystems;
+using Content.Shared.GameObjects.EntitySystems.Surgery;
 using Content.Shared.Interfaces;
 using Content.Shared.Interfaces.GameObjects.Components;
 using Robust.Server.GameObjects;
+using Robust.Server.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
 
-namespace Content.Server.GameObjects.EntitySystems
+namespace Content.Server.GameObjects.EntitySystems.Surgery
 {
     public class SurgerySystem : SharedSurgerySystem
     {
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly ILocalizationManager _loc = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         public override void Initialize()
         {
@@ -30,6 +35,9 @@ namespace Content.Server.GameObjects.EntitySystems
 
             SubscribeLocalEvent<SurgeryDrapesComponent, DrapesTryUseEvent>(OnDrapesTryUse);
             SubscribeLocalEvent<SurgeryDrapesComponent, AfterInteractEvent>(OnDrapesAfterInteract);
+
+            SubscribeLocalEvent<DoOutsiderBeginPopupEvent>(DoOutsiderBeginPopup);
+            SubscribeLocalEvent<DoOutsiderSuccessPopup>(DoOutsiderSuccessPopup);
         }
 
         private void OnDrapesStartup(EntityUid uid, SurgeryDrapesComponent drapes, ComponentStartup args)
@@ -337,23 +345,51 @@ namespace Content.Server.GameObjects.EntitySystems
             var state = new SurgeryUIState(parts.ToArray());
             ui.SetState(state);
         }
-    }
 
-    public class DrapesTryUseEvent : EntityEventArgs
-    {
-        public DrapesTryUseEvent(
-            SurgeonComponent surgeon,
-            SurgeryTargetComponent target,
-            SurgeryOperationPrototype operation)
+        public void DoOutsiderBeginPopup(DoOutsiderBeginPopupEvent ev)
         {
-            Surgeon = surgeon;
-            Target = target;
-            Operation = operation;
+            string msg;
+
+            if (ev.Target == null)
+            {
+                var locId = $"surgery-step-{ev.Id}-begin-no-zone-outsider-popup";
+                msg = _loc.GetString(locId, ("user", ev.Surgeon), ("part", ev.Part));
+            }
+            else if (ev.Surgeon == ev.Target)
+            {
+                var locId = $"surgery-step-{ev.Id}-begin-self-outsider-popup";
+                msg = _loc.GetString(locId, ("user", ev.Surgeon), ("target", ev.Target), ("part", ev.Part));
+            }
+            else
+            {
+                var locId = $"surgery-step-{ev.Id}-begin-outsider-popup";
+                msg = _loc.GetString(locId, ("user", ev.Surgeon), ("target", ev.Target), ("part", ev.Part));
+            }
+
+            ev.Surgeon.PopupMessageOtherClients(msg, _playerManager, except: ev.Target ?? ev.Surgeon);
         }
 
-        public SurgeonComponent Surgeon { get; }
-        public SurgeryTargetComponent Target { get; }
-        public SurgeryOperationPrototype Operation { get; }
-        public bool Used { get; set; }
+        public void DoOutsiderSuccessPopup(DoOutsiderSuccessPopup ev)
+        {
+            string msg;
+
+            if (ev.Target == null)
+            {
+                var locId = $"surgery-step-{ev.Id}-success-no-zone-outsider-popup";
+                msg =  _loc.GetString(locId, ("user", ev.Surgeon), ("part", ev.Part));
+            }
+            else if (ev.Surgeon == ev.Target)
+            {
+                var locId = $"surgery-step-{ev.Id}-success-self-outsider-popup";
+                msg = _loc.GetString(locId, ("user", ev.Surgeon), ("target", ev.Target), ("part", ev.Part));
+            }
+            else
+            {
+                var locId = $"surgery-step-{ev.Id}-success-outsider-popup";
+                msg = _loc.GetString(locId, ("user", ev.Surgeon), ("target", ev.Target), ("part", ev.Part));
+            }
+
+            ev.Surgeon.PopupMessageOtherClients(msg, _playerManager, except: ev.Target ?? ev.Surgeon);
+        }
     }
 }
