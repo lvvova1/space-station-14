@@ -2,8 +2,6 @@
 using System.Threading;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Part;
-using Content.Shared.Body.Surgery.Events;
-using Content.Shared.Body.Surgery.Events.Popups;
 using Content.Shared.Body.Surgery.Operation;
 using Content.Shared.Body.Surgery.Operation.Messages;
 using Content.Shared.Body.Surgery.Operation.Step;
@@ -43,15 +41,7 @@ namespace Content.Shared.Body.Surgery
             SubscribeLocalEvent<SurgeonComponent, SurgeonStartedOperation>(OnSurgeonStartedOperation);
             SubscribeLocalEvent<SurgeonComponent, SurgeonStoppedOperation>(OnSurgeonStoppedOperation);
 
-            SubscribeLocalEvent<SurgeryTargetComponent, CheckCanAddSurgeryTagEvent>(OnCanAddSurgeryTag);
-            SubscribeLocalEvent<SurgeryTargetComponent, TryAddSurgeryTagEvent>(OnTryAddSurgeryTag);
             SubscribeLocalEvent<SurgeryTargetComponent, OperationEnded>(HandleOperationEnded);
-            SubscribeLocalEvent<SurgeryTargetComponent, GetPopupReceiverEvent>(OnGetPopupReceiver);
-
-            SubscribeLocalEvent<DoSurgeonBeginPopupEvent>(DoSurgeonBeginPopup);
-            SubscribeLocalEvent<DoTargetBeginPopupEvent>(DoTargetBeginPopup);
-            SubscribeLocalEvent<DoSurgeonSuccessPopup>(DoSurgeonSuccessPopup);
-            SubscribeLocalEvent<DoTargetSuccessPopup>(DoTargetSuccessPopup);
         }
 
         private void OnTargetComponentRemoved(EntityUid uid, SurgeryTargetComponent target, ComponentRemove args)
@@ -64,15 +54,15 @@ namespace Content.Shared.Body.Surgery
             StopSurgery(target.Surgeon, target);
         }
 
-        private void OnGetPopupReceiver(EntityUid uid, SurgeryTargetComponent target, GetPopupReceiverEvent args)
+        public IEntity? GetPopupReceiver(IEntity target)
         {
-            if (target.Owner.TryGetComponent(out SharedBodyPartComponent? part) &&
+            if (target.TryGetComponent(out SharedBodyPartComponent? part) &&
                 part.Body?.Owner != null)
             {
-                args.Receiver = part.Body.Owner;
+                return part.Body.Owner;
             }
 
-            args.Receiver = target.Owner;
+            return null;
         }
 
         private void OnSurgeonStartedOperation(EntityUid uid, SurgeonComponent surgeon, SurgeonStartedOperation args)
@@ -147,7 +137,7 @@ namespace Content.Shared.Body.Surgery
             return true;
         }
 
-        protected bool TryStartSurgery(
+        public bool TryStartSurgery(
             SurgeonComponent surgeon,
             SurgeryTargetComponent target,
             SurgeryOperationPrototype operation)
@@ -155,12 +145,12 @@ namespace Content.Shared.Body.Surgery
             return TryStartSurgery(surgeon, target, operation, out _);
         }
 
-        protected bool IsPerformingSurgery(SurgeonComponent surgeon)
+        public bool IsPerformingSurgery(SurgeonComponent surgeon)
         {
             return surgeon.Target != null;
         }
 
-        protected bool IsPerformingSurgeryOn(SurgeonComponent surgeon, SurgeryTargetComponent target)
+        public bool IsPerformingSurgeryOn(SurgeonComponent surgeon, SurgeryTargetComponent target)
         {
             if (surgeon.Target == target)
             {
@@ -199,7 +189,7 @@ namespace Content.Shared.Body.Surgery
         ///     Tries to stop the surgery that the surgeon is performing.
         /// </summary>
         /// <returns>True if stopped, false otherwise even if no surgery was underway.</returns>
-        protected bool StopSurgery(SurgeonComponent surgeon)
+        public bool StopSurgery(SurgeonComponent surgeon)
         {
             if (surgeon.Target == null)
             {
@@ -218,7 +208,7 @@ namespace Content.Shared.Body.Surgery
             return true;
         }
 
-        private bool StopSurgery(SurgeonComponent surgeon, SurgeryTargetComponent target)
+        public bool StopSurgery(SurgeonComponent surgeon, SurgeryTargetComponent target)
         {
             if (surgeon.Target != target)
             {
@@ -228,7 +218,7 @@ namespace Content.Shared.Body.Surgery
             return StopSurgery(surgeon);
         }
 
-        private bool CanAddSurgeryTag(SurgeryTargetComponent target, SurgeryTag tag)
+        public bool CanAddSurgeryTag(SurgeryTargetComponent target, SurgeryTag tag)
         {
             if (target.Operation == null ||
                 target.Operation.Steps.Count <= target.SurgeryTags.Count)
@@ -245,29 +235,14 @@ namespace Content.Shared.Body.Surgery
             return true;
         }
 
-        private void OnCanAddSurgeryTag(EntityUid uid, SurgeryTargetComponent target, CheckCanAddSurgeryTagEvent args)
+        public bool TryAddSurgeryTag(SurgeryTargetComponent target, SurgeryTag tag)
         {
-            args.CanAdd = CanAddSurgeryTag(target, args.Tag);
-        }
-
-        private void OnTryAddSurgeryTag(EntityUid uid, SurgeryTargetComponent target, TryAddSurgeryTagEvent args)
-        {
-            var msg = new CheckCanAddSurgeryTagEvent(args.Tag);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
-
-            if (!msg.CanAdd)
-            {
-                args.Added = false;
-                return;
-            }
-
-            target.SurgeryTags.Add(args.Tag);
+            target.SurgeryTags.Add(tag);
             CheckCompletion(target);
-
-            args.Added = true;
+            return true;
         }
 
-        private bool TryRemoveSurgeryTag(SurgeryTargetComponent target, SurgeryTag tag)
+        public bool TryRemoveSurgeryTag(SurgeryTargetComponent target, SurgeryTag tag)
         {
             if (target.SurgeryTags.Count == 0 ||
                 target.SurgeryTags[^1] != tag)
@@ -311,100 +286,90 @@ namespace Content.Shared.Body.Surgery
             target.Operation.Effect?.Execute(target.Surgeon, target);
         }
 
-        public void DoSurgeonBeginPopup(DoSurgeonBeginPopupEvent ev)
+        public virtual void DoBeginPopups(SurgeonComponent surgeon, IEntity target, string id)
+        {
+            var targetReceiver = GetPopupReceiver(target);
+            DoSurgeonBeginPopup(surgeon.Owner, targetReceiver, target, id);
+
+            if (!IsPerformingSurgeryOnSelf(surgeon))
+            {
+                DoTargetBeginPopup(surgeon.Owner, targetReceiver, target, id);
+            }
+        }
+
+        public void DoSurgeonBeginPopup(IEntity surgeon, IEntity? target, IEntity part, string id)
         {
             string msg;
 
-            if (ev.Target == null)
+            if (target == null)
             {
-                var locId = $"surgery-step-{ev.Id}-begin-no-zone-surgeon-popup";
-                msg = _loc.GetString(locId, ("user", ev.Surgeon), ("part", ev.Part));
+                var locId = $"surgery-step-{id}-begin-no-zone-surgeon-popup";
+                msg = _loc.GetString(locId, ("user", surgeon), ("part", part));
             }
-            else if (ev.Surgeon == ev.Target)
+            else if (surgeon == target)
             {
-                var locId = $"surgery-step-{ev.Id}-begin-self-surgeon-popup";
-                msg = _loc.GetString(locId, ("user", ev.Surgeon), ("target", ev.Target), ("part", ev.Part));
+                var locId = $"surgery-step-{id}-begin-self-surgeon-popup";
+                msg = _loc.GetString(locId, ("user", surgeon), ("target", target), ("part", part));
             }
             else
             {
-                var locId = $"surgery-step-{ev.Id}-begin-surgeon-popup";
-                msg = _loc.GetString(locId, ("user", ev.Surgeon), ("target", ev.Target), ("part", ev.Part));
+                var locId = $"surgery-step-{id}-begin-surgeon-popup";
+                msg = _loc.GetString(locId, ("user", surgeon), ("target", target), ("part", part));
             }
 
-            ev.Surgeon.PopupMessage(msg);
+            surgeon.PopupMessage(msg);
         }
 
-        public void DoTargetBeginPopup(DoTargetBeginPopupEvent ev)
+        public void DoTargetBeginPopup(IEntity surgeon, IEntity? target, IEntity part, string id)
         {
-            var locId = $"surgery-step-{ev.Id}-begin-target-popup";
-            var msg = _loc.GetString(locId, ("user", ev.Surgeon), ("part", ev.Target));
+            var locId = $"surgery-step-{id}-begin-target-popup";
+            var msg = _loc.GetString(locId, ("user", surgeon), ("part", part));
 
-            ev.Target.PopupMessage(msg);
+            (target ?? part).PopupMessage(msg);
         }
 
-        public void DoSurgeonSuccessPopup(DoSurgeonSuccessPopup ev)
+        public virtual void DoSuccessPopups(SurgeonComponent surgeon, IEntity target, string id)
+        {
+            var surgeonOwner = surgeon.Owner;
+            var bodyOwner = target.GetComponentOrNull<SharedBodyPartComponent>()?.Body?.Owner;
+
+            DoSurgeonSuccessPopup(surgeonOwner, bodyOwner, target, id);
+
+            if (bodyOwner != surgeonOwner)
+            {
+                DoTargetSuccessPopup(surgeonOwner, bodyOwner, target, id);
+            }
+        }
+
+        public void DoSurgeonSuccessPopup(IEntity surgeon, IEntity? target, IEntity part, string id)
         {
             string msg;
 
-            if (ev.Target == null)
+            if (target == null)
             {
-                var locId = $"surgery-step-{ev.Id}-success-no-zone-surgeon-popup";
-                msg = _loc.GetString(locId, ("user", ev.Surgeon), ("part", ev.Part));
+                var locId = $"surgery-step-{id}-success-no-zone-surgeon-popup";
+                msg = _loc.GetString(locId, ("user", surgeon), ("part", part));
             }
-            else if (ev.Surgeon == ev.Target)
+            else if (surgeon == target)
             {
-                var locId = $"surgery-step-{ev.Id}-success-self-surgeon-popup";
-                msg = _loc.GetString(locId, ("user", ev.Surgeon), ("target", ev.Target), ("part", ev.Part));
+                var locId = $"surgery-step-{id}-success-self-surgeon-popup";
+                msg = _loc.GetString(locId, ("user", surgeon), ("target", target), ("part", part));
             }
             else
             {
-                var locId = $"surgery-step-{ev.Id}-success-surgeon-popup";
-                msg = _loc.GetString(locId, ("user", ev.Surgeon), ("target", ev.Target), ("part", ev.Part));
+                var locId = $"surgery-step-{id}-success-surgeon-popup";
+                msg = _loc.GetString(locId, ("user", surgeon), ("target", target), ("part", part));
             }
 
-            ev.Surgeon.PopupMessage(msg);
+            surgeon.PopupMessage(msg);
         }
 
-        public void DoTargetSuccessPopup(DoTargetSuccessPopup ev)
+        public void DoTargetSuccessPopup(IEntity surgeon, IEntity? target, IEntity part, string id)
         {
-            var locId = $"surgery-step-{ev.Id}-success-target-popup";
-            var msg = _loc.GetString(locId, ("user", ev.Surgeon), ("part", ev.Part));
+            var locId = $"surgery-step-{id}-success-target-popup";
+            var msg = _loc.GetString(locId, ("user", surgeon), ("part", part));
 
-            ev.Part.PopupMessage(msg);
+            (target ?? part).PopupMessage(msg);
         }
-    }
-
-    public class PerformingSurgeryCheckEvent : EntityEventArgs
-    {
-        public PerformingSurgeryCheckEvent(SurgeryTargetComponent target)
-        {
-            Target = target;
-        }
-
-        public SurgeryTargetComponent Target { get; }
-
-        public bool Performing { get; set; }
-    }
-
-    public class PerformingSurgeryOnSelfCheckEvent : EntityEventArgs
-    {
-        public bool PerformingOnSelf { get; set; }
-    }
-
-    public class TryStopSurgeryEvent : EntityEventArgs
-    {
-        public TryStopSurgeryEvent(SurgeryTargetComponent target)
-        {
-            Target = target;
-        }
-
-        public SurgeryTargetComponent Target { get; }
-
-        public bool Stopped { get; set; }
-    }
-
-    public class GetPopupReceiverEvent : EntityEventArgs
-    {
-        public IEntity? Receiver { get; set; }
     }
 }

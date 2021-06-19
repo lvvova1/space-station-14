@@ -4,7 +4,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Content.Shared.Body.Surgery.Tool
 {
-    public abstract class SharedSurgeryToolComponent : Component
+    public class SharedSurgeryToolComponent : Component
     {
         public override string Name => "SurgeryTool";
 

@@ -1,8 +1,4 @@
-﻿using Content.Server.Body.Surgery.Events.Popups;
-using Content.Shared.Body.Part;
-using Content.Shared.Body.Surgery.Events;
-using Content.Shared.Body.Surgery.Events.Popups;
-using Content.Shared.Body.Surgery.Operation.Step;
+﻿using Content.Shared.Body.Surgery.Operation.Step;
 using Content.Shared.Body.Surgery.Surgeon;
 using Content.Shared.Body.Surgery.Target;
 using Content.Shared.Notification.Managers;
@@ -17,39 +13,23 @@ namespace Content.Server.Body.Surgery.Tool.Behaviors
 {
     public class StepSurgery : ISurgeryBehavior
     {
+        private SurgerySystem SurgerySystem => EntitySystem.Get<SurgerySystem>();
+
         [DataField("step", customTypeSerializer: typeof(PrototypeIdSerializer<SurgeryStepPrototype>))]
         private string? StepId { get; } = default;
 
-        public SurgeryStepPrototype? Step => StepId == null
+        private SurgeryStepPrototype? Step => StepId == null
             ? null
             : IoCManager.Resolve<IPrototypeManager>().Index<SurgeryStepPrototype>(StepId);
 
         public bool CanPerform(SurgeonComponent surgeon, SurgeryTargetComponent target)
         {
-            if (StepId == null)
-            {
-                return false;
-            }
-
-            var ev = new CheckCanAddSurgeryTagEvent(StepId);
-            target.Owner.EntityManager.EventBus.RaiseLocalEvent(target.Owner.Uid, ev);
-
-            return ev.CanAdd;
+            return Step != null && SurgerySystem.CanAddSurgeryTag(target, Step.ID);
         }
 
         public bool Perform(SurgeonComponent surgeon, SurgeryTargetComponent target)
         {
-            var step = Step;
-
-            if (step == null)
-            {
-                return false;
-            }
-
-            var ev = new TryAddSurgeryTagEvent(step.ID);
-            target.Owner.EntityManager.EventBus.RaiseLocalEvent(target.Owner.Uid, ev);
-
-            return ev.Added;
+            return Step != null && SurgerySystem.TryAddSurgeryTag(target, Step.ID);
         }
 
         public void OnPerformDelayBegin(SurgeonComponent surgeon, SurgeryTargetComponent target)
@@ -61,21 +41,7 @@ namespace Content.Server.Body.Surgery.Tool.Behaviors
                 return;
             }
 
-            var surgeonOwner = surgeon.Owner;
-            var bodyOwner = target.Owner.GetComponentOrNull<SharedBodyPartComponent>()?.Body?.Owner ?? target.Owner;
-            var eventBus = target.Owner.EntityManager.EventBus;
-
-            var surgeonPopup = new DoSurgeonBeginPopupEvent(surgeonOwner, bodyOwner, target.Owner, step.LocId);
-            eventBus.RaiseEvent(EventSource.Local, surgeonPopup);
-
-            if (bodyOwner != surgeonOwner)
-            {
-                var targetPopup = new DoTargetBeginPopupEvent(surgeonOwner, bodyOwner, step.LocId);
-                eventBus.RaiseEvent(EventSource.Local, targetPopup);
-            }
-
-            var outsiderPopup = new DoOutsiderBeginPopupEvent(surgeonOwner, bodyOwner, target.Owner, step.LocId);
-            eventBus.RaiseEvent(EventSource.Local, outsiderPopup);
+            SurgerySystem.DoBeginPopups(surgeon, target.Owner, step.LocId);
         }
 
         public void OnPerformSuccess(SurgeonComponent surgeon, SurgeryTargetComponent target)
@@ -87,21 +53,7 @@ namespace Content.Server.Body.Surgery.Tool.Behaviors
                 return;
             }
 
-            var surgeonOwner = surgeon.Owner;
-            var bodyOwner = target.Owner.GetComponentOrNull<SharedBodyPartComponent>()?.Body?.Owner ?? target.Owner;
-            var eventBus = target.Owner.EntityManager.EventBus;
-
-            var surgeonPopup = new DoSurgeonSuccessPopup(surgeonOwner, bodyOwner, target.Owner, step.LocId);
-            eventBus.RaiseEvent(EventSource.Local, surgeonPopup);
-
-            if (bodyOwner != surgeonOwner)
-            {
-                var targetPopup = new DoTargetSuccessPopup(surgeonOwner, bodyOwner, step.LocId);
-                eventBus.RaiseEvent(EventSource.Local, targetPopup);
-            }
-
-            var outsiderPopup = new DoOutsiderSuccessPopup(surgeonOwner, bodyOwner, target.Owner, step.LocId);
-            eventBus.RaiseEvent(EventSource.Local, outsiderPopup);
+            SurgerySystem.DoSuccessPopups(surgeon, target.Owner, step.LocId);
         }
 
         public void OnPerformFail(SurgeonComponent surgeon, SurgeryTargetComponent target)

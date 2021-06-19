@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using Content.Server.Body.Surgery.Events;
+using Content.Server.Body.Surgery;
 using Content.Server.Body.Surgery.Tool;
 using Content.Shared.Body.Surgery;
 using Content.Shared.Body.Surgery.Operation;
@@ -68,7 +68,7 @@ namespace Content.IntegrationTests.Tests.Surgery
             var sPrototypeManager = server.ResolveDependency<IPrototypeManager>();
             SurgeryOperationPrototype sAmputationOperation = default!;
 
-            var sEventBus = sEntityManager.EventBus;
+            var sSurgerySystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SurgerySystem>();
 
             await server.WaitPost(() =>
             {
@@ -108,16 +108,11 @@ namespace Content.IntegrationTests.Tests.Surgery
 
             await server.WaitAssertion(() =>
             {
-                var drapesUid = sDrapesComp.Owner.Uid;
-                var tryUseEvent = new DrapesTryUseEvent(sSurgeonComp, sSurgeryTargetComp,  sAmputationOperation);
-
                 // Try to start an amputation operation, succeeds
-                sEventBus.RaiseLocalEvent(drapesUid, tryUseEvent);
-                Assert.True(tryUseEvent.Used);
+                Assert.True(sSurgerySystem.TryUseDrapes(sDrapesComp, sSurgeonComp, sSurgeryTargetComp, sAmputationOperation));
 
                 // Try again, fails because an operation is already underway
-                sEventBus.RaiseLocalEvent(drapesUid, tryUseEvent);
-                Assert.False(tryUseEvent.Used);
+                Assert.False(sSurgerySystem.TryUseDrapes(sDrapesComp, sSurgeonComp, sSurgeryTargetComp, sAmputationOperation));
 
                 // Incision goes first
                 AssertValidSteps(sSurgeonComp, sSurgeryTargetComp, sIncisionComp, sAllToolComps);
@@ -156,7 +151,7 @@ namespace Content.IntegrationTests.Tests.Surgery
             var sPrototypeManager = server.ResolveDependency<IPrototypeManager>();
             SurgeryOperationPrototype sAmputationOperation = default!;
 
-            var sEventBus = sEntityManager.EventBus;
+            var sSurgerySystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SurgerySystem>();
 
             await server.WaitPost(() =>
             {
@@ -183,16 +178,11 @@ namespace Content.IntegrationTests.Tests.Surgery
                 Assert.False(sCauterizationComp.Behavior!.CanPerform(sSurgeonComp, sSurgeryTargetComp));
                 Assert.False(sCauterizationComp.Behavior!.Perform(sSurgeonComp, sSurgeryTargetComp));
 
-                var drapesUid = sDrapesComp.Owner.Uid;
-                var tryUseEvent = new DrapesTryUseEvent(sSurgeonComp, sSurgeryTargetComp,  sAmputationOperation);
-
                 // Try to start an amputation operation, succeeds
-                sEventBus.RaiseLocalEvent(drapesUid, tryUseEvent);
-                Assert.True(tryUseEvent.Used);
+                Assert.True(sSurgerySystem.TryUseDrapes(sDrapesComp, sSurgeonComp, sSurgeryTargetComp, sAmputationOperation));
 
                 // Try again, fails because an operation is already underway
-                sEventBus.RaiseLocalEvent(drapesUid, tryUseEvent);
-                Assert.False(tryUseEvent.Used);
+                Assert.False(sSurgerySystem.TryUseDrapes(sDrapesComp, sSurgeonComp, sSurgeryTargetComp, sAmputationOperation));
 
                 Assert.NotNull(sSurgeonComp.Target);
                 Assert.NotNull(sSurgeonComp.SurgeryCancellation);
