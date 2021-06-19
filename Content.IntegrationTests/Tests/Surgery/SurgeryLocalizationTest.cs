@@ -1,8 +1,8 @@
 ﻿#nullable enable
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Content.Shared.GameObjects.Components.Surgery.Operation;
-using Content.Shared.GameObjects.Components.Surgery.Operation.Step;
+using Content.Shared.Body.Surgery.Operation;
+using Content.Shared.Body.Surgery.Operation.Step;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;

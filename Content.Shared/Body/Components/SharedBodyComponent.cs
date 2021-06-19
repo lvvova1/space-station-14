@@ -11,14 +11,6 @@ using Content.Shared.Body.Slot;
 using Content.Shared.Body.Template;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
-using Content.Shared.GameObjects.Components.Body.Part;
-using Content.Shared.GameObjects.Components.Body.Part.Property;
-using Content.Shared.GameObjects.Components.Body.Preset;
-using Content.Shared.GameObjects.Components.Body.Slot;
-using Content.Shared.GameObjects.Components.Body.Template;
-using Content.Shared.GameObjects.Components.Damage;
-using Content.Shared.GameObjects.Components.Movement;
-using Content.Shared.GameObjects.EntitySystems;
 using Content.Shared.Movement.Components;
 using Content.Shared.NetIDs;
 using Content.Shared.Standing;
@@ -34,7 +26,7 @@ using Robust.Shared.ViewVariables;
 namespace Content.Shared.Body.Components
 {
     // TODO BODY Damage methods for collections of IDamageableComponents
-    public abstract class SharedBodyComponent : Component, IBodyPartContainer, ISerializationHooks
+    public abstract class SharedBodyComponent : Component, ISerializationHooks
     {
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
