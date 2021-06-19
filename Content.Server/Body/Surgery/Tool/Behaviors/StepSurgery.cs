@@ -17,7 +17,7 @@ namespace Content.Server.Body.Surgery.Tool.Behaviors
 {
     public class StepSurgery : ISurgeryBehavior
     {
-        [field: DataField("step", customTypeSerializer: typeof(PrototypeIdSerializer<SurgeryStepPrototype>))]
+        [DataField("step", customTypeSerializer: typeof(PrototypeIdSerializer<SurgeryStepPrototype>))]
         private string? StepId { get; } = default;
 
         public SurgeryStepPrototype? Step => StepId == null

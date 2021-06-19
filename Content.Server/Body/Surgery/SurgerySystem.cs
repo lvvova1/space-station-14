@@ -2,6 +2,7 @@
 using Content.Server.Body.Surgery.Events;
 using Content.Server.Body.Surgery.Events.Popups;
 using Content.Server.Body.Surgery.Tool;
+using Content.Server.DoAfter;
 using Content.Server.Notification;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Part;
@@ -27,14 +28,19 @@ namespace Content.Server.Body.Surgery
         [Dependency] private readonly ILocalizationManager _loc = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
+        private DoAfterSystem _doAfter = default!;
+
         public override void Initialize()
         {
             base.Initialize();
 
-            SubscribeLocalEvent<SurgeryDrapesComponent, ComponentStartup>(OnDrapesStartup);
+            _doAfter = Get<DoAfterSystem>();
 
+            SubscribeLocalEvent<SurgeryDrapesComponent, ComponentStartup>(OnDrapesStartup);
             SubscribeLocalEvent<SurgeryDrapesComponent, DrapesTryUseEvent>(OnDrapesTryUse);
             SubscribeLocalEvent<SurgeryDrapesComponent, AfterInteractEvent>(OnDrapesAfterInteract);
+
+            SubscribeLocalEvent<SurgeryToolComponent, AfterInteractEvent>(OnToolAfterInteract);
 
             SubscribeLocalEvent<DoOutsiderBeginPopupEvent>(DoOutsiderBeginPopup);
             SubscribeLocalEvent<DoOutsiderSuccessPopup>(DoOutsiderSuccessPopup);
@@ -87,6 +93,83 @@ namespace Content.Server.Body.Surgery
 
             drapes.UserInterface?.Open(actor.PlayerSession);
             UpdateDrapesUI(drapes, body);
+
+            args.Handled = true;
+        }
+
+        // TODO SURGERY: Add surgery for dismembered limbs
+        // TODO async void alert someone please make do after not async
+        private async void OnToolAfterInteract(EntityUid uid, SurgeryToolComponent tool, AfterInteractEvent args)
+        {
+            if (tool.Behavior == null)
+            {
+                return;
+            }
+
+            if (!args.User.TryGetComponent(out SurgeonComponent? surgeon))
+            {
+                return;
+            }
+
+            if (surgeon.Target == null)
+            {
+                return;
+            }
+
+            var target = args.Target;
+            if (target == null)
+            {
+                return;
+            }
+
+            // If we are not performing surgery on a grape
+            if (surgeon.Target.Owner != target)
+            {
+                // It might be on a body instead
+                if (target.TryGetComponent(out SharedBodyComponent? body) &&
+                    body.HasPart(surgeon.Target.Owner))
+                {
+                    target = surgeon.Target.Owner;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            if (!target.TryGetComponent(out SurgeryTargetComponent? surgeryTarget))
+            {
+                return;
+            }
+
+            if (!tool.Behavior.CanPerform(surgeon, surgeryTarget))
+            {
+                tool.Behavior.OnPerformFail(surgeon, surgeryTarget);
+                return;
+            }
+
+            if (tool.Delay <= 0)
+            {
+                ToolPerform(tool, surgeon, surgeryTarget);
+                return;
+            }
+
+            tool.Behavior.OnPerformDelayBegin(surgeon, surgeryTarget);
+
+            var cancelToken = surgeon.SurgeryCancellation?.Token ?? default;
+            var result = await _doAfter.DoAfter(new DoAfterEventArgs(surgeon.Owner, tool.Delay, cancelToken, target)
+            {
+                BreakOnDamage = true,
+                BreakOnStun = true,
+                BreakOnTargetMove = true,
+                BreakOnUserMove = true,
+                NeedHand = true
+            });
+
+            if (result == DoAfterStatus.Finished)
+            {
+                ToolPerform(tool, surgeon, surgeryTarget);
+            }
 
             args.Handled = true;
         }
@@ -390,6 +473,23 @@ namespace Content.Server.Body.Surgery
             }
 
             ev.Surgeon.PopupMessageOtherClients(msg, _playerManager, except: ev.Target ?? ev.Surgeon);
+        }
+
+        private void ToolPerform(SurgeryToolComponent tool, SurgeonComponent surgeon, SurgeryTargetComponent target)
+        {
+            if (tool.Behavior == null)
+            {
+                return;
+            }
+
+            if (tool.Behavior.Perform(surgeon, target))
+            {
+                tool.Behavior.OnPerformSuccess(surgeon, target);
+            }
+            else
+            {
+                tool.Behavior.OnPerformFail(surgeon, target);
+            }
         }
     }
 }

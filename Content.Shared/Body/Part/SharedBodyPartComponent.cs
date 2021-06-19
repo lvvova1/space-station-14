@@ -7,13 +7,11 @@ using Content.Shared.Body.Behavior;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Mechanism;
 using Content.Shared.Body.Part.Property;
-using Content.Shared.GameObjects.Components.Body.Part;
 using Content.Shared.NetIDs;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Players;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -21,10 +19,8 @@ using Robust.Shared.ViewVariables;
 
 namespace Content.Shared.Body.Part
 {
-    public abstract class SharedBodyPartComponent : Component, IBodyPartContainer
+    public abstract class SharedBodyPartComponent : Component
     {
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-
         public override string Name => "BodyPart";
 
         public override uint? NetID => ContentNetIDs.BODY_PART;
@@ -72,32 +68,27 @@ namespace Content.Shared.Body.Part
         public string DisplayName => Name;
 
         /// <summary>
-        ///     <see cref="BodyPartType"/> that this <see cref="IBodyPart"/> is considered
-        ///     to be.
-        ///     For example, <see cref="BodyPartType.Arm"/>.
+        ///     <see cref="BodyPartType"/> that this part is considered to be.
         /// </summary>
         [ViewVariables]
         [DataField("partType")]
-        public BodyPartType PartType { get; private set; } = BodyPartType.Other;
+        public BodyPartType PartType { get; } = BodyPartType.Other;
 
         /// <summary>
-        ///     Determines how many mechanisms can be fit inside this
-        ///     <see cref="SharedBodyPartComponent"/>.
+        ///     Determines how many mechanisms can be fit inside this part.
         /// </summary>
-        [ViewVariables] [DataField("size")] public int Size { get; private set; } = 1;
+        [ViewVariables] [DataField("size")] public int Size { get; } = 1;
 
         [ViewVariables] public int SizeUsed { get; private set; }
 
         // TODO BODY size used
 
         /// <summary>
-        ///     What types of BodyParts this <see cref="SharedBodyPartComponent"/> can easily attach to.
-        ///     For the most part, most limbs aren't universal and require extra work to
-        ///     attach between types.
+        ///     What types of BodyParts this part can easily attach to.
         /// </summary>
         [ViewVariables]
         [DataField("compatibility")]
-        public BodyPartCompatibility Compatibility { get; private set; } = BodyPartCompatibility.Universal;
+        public BodyPartCompatibility Compatibility { get; } = BodyPartCompatibility.Universal;
 
         // TODO BODY Mechanisms occupying different parts at the body level
         [ViewVariables]
@@ -105,16 +96,16 @@ namespace Content.Shared.Body.Part
 
         // TODO BODY Replace with a simulation of organs
         /// <summary>
-        ///     Whether or not the owning <see cref="Body"/> will die if all
-        ///     <see cref="SharedBodyPartComponent"/>s of this type are removed from it.
+        ///     Whether or not the owning body will die if all parts of this type
+        ///     are removed from it.
         /// </summary>
         [ViewVariables]
         [DataField("vital")]
-        public bool IsVital { get; private set; } = false;
+        public bool IsVital { get; } = false;
 
         [ViewVariables]
         [DataField("symmetry")]
-        public BodyPartSymmetry Symmetry { get; private set; } = BodyPartSymmetry.None;
+        public BodyPartSymmetry Symmetry { get; } = BodyPartSymmetry.None;
 
         protected virtual void OnAddMechanism(SharedMechanismComponent mechanism)
         {
