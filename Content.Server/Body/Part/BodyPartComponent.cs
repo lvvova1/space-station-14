@@ -1,5 +1,5 @@
 ﻿#nullable enable
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Body.Mechanism;
 using Content.Shared.Body.Part;
 using Content.Shared.Random.Helpers;

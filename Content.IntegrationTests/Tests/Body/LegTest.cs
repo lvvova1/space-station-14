@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Content.Server.Body;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Body.Part;
 using Content.Shared.Rotation;
 using NUnit.Framework;

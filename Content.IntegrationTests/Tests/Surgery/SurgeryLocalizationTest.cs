@@ -17,6 +17,8 @@ namespace Content.IntegrationTests.Tests.Surgery
     {
         // ReSharper disable once CollectionNeverUpdated.Local
         // ReSharper disable once RedundantEmptyObjectOrCollectionInitializer
+
+        // Add SurgeryStepPrototype IDs here to skip them in the localization test
         private static readonly HashSet<string> ExceptIds = new() {};
 
         private void AddIfMissing(ILocalizationManager loc, string id, List<string> missingIds, params (string, object)[] args)

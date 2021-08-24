@@ -1,10 +1,8 @@
 #nullable enable
-using System.Linq;
 using System.Threading.Tasks;
 using Content.Server.Body.Behavior;
 using Content.Server.Fluids.Components;
 using Content.Shared.Audio;
-using Content.Shared.Body.Components;
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Chemistry.Solution;
@@ -12,7 +10,6 @@ using Content.Shared.Chemistry.Solution.Components;
 using Content.Shared.Examine;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Helpers;
-using Content.Shared.Notification;
 using Content.Shared.Notification.Managers;
 using Content.Shared.Nutrition.Components;
 using Content.Shared.Throwing;
@@ -29,7 +26,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Content.Server.Nutrition.Components
+ontent.Server.Nutrition.Components
 {
     [RegisterComponent]
     public class DrinkComponent : Component, IUse, IAfterInteract, ISolutionChange, IExamine, ILand

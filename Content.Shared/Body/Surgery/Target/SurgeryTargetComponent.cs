@@ -16,12 +16,16 @@ namespace Content.Shared.Body.Surgery.Target
     {
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
-        public override string Name => "Surgery";
+        public override string Name => "SurgeryTarget";
         public override uint? NetID => ContentNetIDs.SURGERY_TARGET;
 
         private SurgeonComponent? _surgeon;
         [ViewVariables] private string? _operationId;
 
+        /// <summary>
+        ///     Modified in <see cref="SharedSurgerySystem.TryAddSurgeryTag"/> and
+        ///     <see cref="SharedSurgerySystem.TryRemoveSurgeryTag"/>
+        /// </summary>
         [ViewVariables]
         [DataField("tags")]
         public List<SurgeryTag> SurgeryTags { get; } = new();
@@ -30,16 +34,7 @@ namespace Content.Shared.Body.Surgery.Target
         public SurgeonComponent? Surgeon
         {
             get => _surgeon;
-            set
-            {
-                if (_surgeon == value)
-                {
-                    return;
-                }
-
-                _surgeon = value;
-                Dirty();
-            }
+            set => this.SetAndDirtyIfChanged(ref _surgeon, value);
         }
 
         [ViewVariables]
@@ -48,16 +43,7 @@ namespace Content.Shared.Body.Surgery.Target
             get => _operationId == null
                 ? null
                 : _prototypeManager.Index<SurgeryOperationPrototype>(_operationId);
-            set
-            {
-                if (_operationId == value?.ID)
-                {
-                    return;
-                }
-
-                _operationId = value?.ID;
-                Dirty();
-            }
+            set => this.SetAndDirtyIfChanged(ref _operationId, value?.ID);
         }
 
         [ViewVariables]
@@ -66,7 +52,7 @@ namespace Content.Shared.Body.Surgery.Target
 
         public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new SurgeryTargetComponentState(_surgeon?.Owner.Uid, _operationId);
+            return new SurgeryTargetComponentState(_surgeon?.Owner.Uid, _operationId, SurgeryTags);
         }
 
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
@@ -85,6 +71,9 @@ namespace Content.Shared.Body.Surgery.Target
                     .EnsureComponent<SurgeonComponent>();
 
             _operationId = state.Operation;
+
+            SurgeryTags.Clear();
+            SurgeryTags.AddRange(state.Tags);
         }
     }
 }

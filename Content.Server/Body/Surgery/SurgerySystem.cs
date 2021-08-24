@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using Content.Server.Body.Surgery.Tool;
 using Content.Server.DoAfter;
 using Content.Server.Notification;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Surgery;
 using Content.Shared.Body.Surgery.Operation;
+using Content.Shared.Body.Surgery.Operation.Step;
 using Content.Shared.Body.Surgery.Surgeon;
 using Content.Shared.Body.Surgery.Target;
 using Content.Shared.Body.Surgery.UI;
@@ -87,36 +87,23 @@ namespace Content.Server.Body.Surgery
         }
 
         // TODO SURGERY: Add surgery for dismembered limbs
-        // TODO async void alert someone please make do after not async
+        // TODO async void alert someone please make doafter not async
         private async void OnToolAfterInteract(EntityUid uid, SurgeryToolComponent tool, AfterInteractEvent args)
         {
-            if (tool.Behavior == null)
-            {
-                return;
-            }
-
-            if (!args.User.TryGetComponent(out SurgeonComponent? surgeon))
-            {
-                return;
-            }
-
-            if (surgeon.Target == null)
+            if (!args.User.TryGetComponent(out SurgeonComponent? surgeon) ||
+                surgeon.Target == null ||
+                args.Target == null)
             {
                 return;
             }
 
             var target = args.Target;
-            if (target == null)
-            {
-                return;
-            }
 
             // If we are not performing surgery on a grape
-            if (surgeon.Target.Owner != target)
+            if (target != surgeon.Target.Owner)
             {
                 // It might be on a body instead
-                if (target.TryGetComponent(out SharedBodyComponent? body) &&
-                    body.HasPart(surgeon.Target.Owner))
+                if (target == surgeon.TargetedBody?.Owner)
                 {
                     target = surgeon.Target.Owner;
                 }
@@ -131,33 +118,35 @@ namespace Content.Server.Body.Surgery
                 return;
             }
 
-            if (!tool.Behavior.CanPerform(surgeon, surgeryTarget))
+            if (!CanPerform(surgeon, surgeryTarget, tool, out var step))
             {
-                tool.Behavior.OnPerformFail(surgeon, surgeryTarget);
+                surgeon.Owner.PopupMessage(Loc.GetString("surgery-step-not-useful"));
                 return;
             }
 
             if (tool.Delay <= 0)
             {
-                ToolPerform(tool, surgeon, surgeryTarget);
+                TryPerform(surgeon, surgeryTarget, tool);
                 return;
             }
 
-            tool.Behavior.OnPerformDelayBegin(surgeon, surgeryTarget);
+            var context = new SurgeryStepContext(surgeon, surgeryTarget, tool, this, step);
+            step.OnPerformDelayBegin(context);
 
             var cancelToken = surgeon.SurgeryCancellation?.Token ?? default;
-            var result = await _doAfter.DoAfter(new DoAfterEventArgs(surgeon.Owner, tool.Delay, cancelToken, target)
+            var doAfterArgs = new DoAfterEventArgs(surgeon.Owner, tool.Delay, cancelToken, args.Target)
             {
                 BreakOnDamage = true,
                 BreakOnStun = true,
                 BreakOnTargetMove = true,
                 BreakOnUserMove = true,
                 NeedHand = true
-            });
+            };
+            var result = await _doAfter.DoAfter(doAfterArgs);
 
             if (result == DoAfterStatus.Finished)
             {
-                ToolPerform(tool, surgeon, surgeryTarget);
+                TryPerform(surgeon, surgeryTarget, tool);
             }
 
             args.Handled = true;
@@ -252,7 +241,7 @@ namespace Content.Server.Body.Surgery
 
                     id = "surgery-prepare-start-self-outsider-popup";
                     part.Body.Owner.PopupMessageOtherClients(Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner),
                         ("part", target),
                         ("procedure", operation.Name)),
@@ -267,7 +256,7 @@ namespace Content.Server.Body.Surgery
 
                     id = "surgery-prepare-start-self-no-zone-outsider-popup";
                     target.PopupMessage(surgeon.Owner, Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner)));
                 }
             }
@@ -284,13 +273,13 @@ namespace Content.Server.Body.Surgery
 
                     id = "surgery-prepare-start-target-popup";
                     surgeon.Owner.PopupMessage(body.Owner, Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner),
                         ("zone", part.Owner)));
 
                     id = "surgery-prepare-start-outsider-popup";
                     surgeon.Owner.PopupMessageOtherClients(Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner),
                         ("target", body.Owner),
                         ("zone", target)),
@@ -306,12 +295,12 @@ namespace Content.Server.Body.Surgery
 
                     id = "surgery-prepare-start-no-zone-target-popup";
                     surgeon.Owner.PopupMessage(target, Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner)));
 
                     id = "surgery-prepare-start-no-zone-outsider-popup";
                     surgeon.Owner.PopupMessageOtherClients(Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner),
                         ("target", target)),
                         except: target);
@@ -333,7 +322,7 @@ namespace Content.Server.Body.Surgery
 
                     id = "surgery-prepare-cancel-self-outsider-popup";
                     part.Body.Owner.PopupMessageOtherClients(Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner),
                         ("part", target)),
                         except: part.Body.Owner);
@@ -346,7 +335,7 @@ namespace Content.Server.Body.Surgery
 
                     id = "surgery-prepare-cancel-self-no-zone-outsider-popup";
                     target.PopupMessage(surgeon.Owner, Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner)));
                 }
             }
@@ -362,13 +351,13 @@ namespace Content.Server.Body.Surgery
 
                     id = "surgery-prepare-cancel-target-popup";
                     surgeon.Owner.PopupMessage(body.Owner, Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner),
                         ("zone", part.Owner)));
 
                     id = "surgery-prepare-cancel-outsider-popup";
                     surgeon.Owner.PopupMessageOtherClients(Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner),
                         ("target", body.Owner),
                         ("zone", target)),
@@ -383,12 +372,12 @@ namespace Content.Server.Body.Surgery
 
                     id = "surgery-prepare-cancel-no-zone-target-popup";
                     surgeon.Owner.PopupMessage(target, Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner)));
 
                     id = "surgery-prepare-cancel-no-zone-outsider-popup";
                     surgeon.Owner.PopupMessageOtherClients(Loc.GetString(id,
-                        ("user", surgeon),
+                        ("user", surgeon.Owner),
                         ("item", drapes.Owner),
                         ("target", target)),
                         except: target);
@@ -480,21 +469,16 @@ namespace Content.Server.Body.Surgery
             surgeon.PopupMessageOtherClients(msg, _playerManager, except: target ?? surgeon);
         }
 
-        private void ToolPerform(SurgeryToolComponent tool, SurgeonComponent surgeon, SurgeryTargetComponent target)
+        public override bool OpenChooseMechanismUI(SurgeonComponent surgeon, SurgeryTargetComponent target)
         {
-            if (tool.Behavior == null)
+            if (!surgeon.Owner.TryGetComponent(out ActorComponent? actor) ||
+                !target.Owner.TryGetComponent(out BodyComponent? body))
             {
-                return;
+                return false;
             }
 
-            if (tool.Behavior.Perform(surgeon, target))
-            {
-                tool.Behavior.OnPerformSuccess(surgeon, target);
-            }
-            else
-            {
-                tool.Behavior.OnPerformFail(surgeon, target);
-            }
+            body.MechanismSelectionUI?.Open(actor.PlayerSession);
+            return true;
         }
     }
 }

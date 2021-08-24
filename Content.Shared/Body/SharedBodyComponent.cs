@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Content.Shared.Body.Behavior;
+using Content.Shared.Body.Mechanism;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Part.Property;
 using Content.Shared.Body.Preset;
@@ -23,7 +23,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Content.Shared.Body.Components
+namespace Content.Shared.Body
 {
     // TODO BODY Damage methods for collections of IDamageableComponents
     public abstract class SharedBodyComponent : Component, ISerializationHooks

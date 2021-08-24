@@ -10,10 +10,8 @@ using Content.Server.Temperature.Components;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Alert;
 using Content.Shared.Atmos;
-using Content.Shared.Body.Components;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
-using Content.Shared.Metabolism.Events;
 using Content.Shared.MobState;
 using Content.Shared.Notification.Managers;
 using Robust.Shared.GameObjects;
@@ -21,7 +19,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Content.Server.Metabolism
+ontent.Server.Metabolism
 {
     [RegisterComponent]
     public class MetabolismComponent : Component

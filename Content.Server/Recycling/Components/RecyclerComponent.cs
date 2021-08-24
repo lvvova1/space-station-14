@@ -8,8 +8,6 @@ using Content.Server.Items;
 using Content.Server.Notification;
 using Content.Server.Players;
 using Content.Server.Power.Components;
-using Content.Shared.Body.Components;
-using Content.Shared.Notification;
 using Content.Shared.Notification.Managers;
 using Content.Shared.Recycling;
 using Robust.Server.GameObjects;
@@ -24,7 +22,7 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Content.Server.Recycling.Components
+ontent.Server.Recycling.Components
 {
     // TODO: Add sound and safe beep
     [RegisterComponent]

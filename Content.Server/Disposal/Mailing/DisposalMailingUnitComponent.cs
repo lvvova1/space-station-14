@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,16 +13,13 @@ using Content.Server.DoAfter;
 using Content.Server.Hands.Components;
 using Content.Server.Items;
 using Content.Server.Power.Components;
-using Content.Server.UserInterface;
 using Content.Shared.ActionBlocker;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Configurable;
 using Content.Shared.Disposal.Components;
 using Content.Shared.DragDrop;
 using Content.Shared.Interaction;
 using Content.Shared.Movement;
-using Content.Shared.Notification;
-using Content.Shared.Notification.Managers;
 using Content.Shared.Verbs;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
@@ -193,7 +189,7 @@ namespace Content.Server.Disposal.Mailing
 
             if (entity.TryGetComponent(out ActorComponent? actor))
             {
-                UserInterface?.Close(actor.PlayerSession);
+                Server.UserInterface?.Close(actor.PlayerSession);
             }
 
             UpdateVisualState();
@@ -387,7 +383,7 @@ namespace Content.Server.Disposal.Mailing
 
             stateString = Loc.GetString($"{State}");
             var state = new DisposalUnitBoundUserInterfaceState(Owner.Name, stateString, _pressure, Powered, Engaged);
-            UserInterface?.SetState(state);
+            Server.UserInterface?.SetState(state);
         }
 
         private bool PlayerCanUse(IEntity? player)
@@ -561,12 +557,12 @@ namespace Content.Server.Disposal.Mailing
 
             _container = ContainerHelpers.EnsureContainer<Container>(Owner, Name);
 
-            if (UserInterface != null)
+            if (Server.UserInterface != null)
             {
-                UserInterface.OnReceiveMessage += OnUiReceiveMessage;
+                Server.UserInterface.OnReceiveMessage += OnUiReceiveMessage;
             }
 
-            _connection = new WiredNetworkConnection(OnReceiveNetMessage, false, Owner);
+            _connection = new WiredNetworkConnection(DeviceNetwork.OnReceiveNetMessage, false, Owner);
             UpdateInterface();
         }
 
@@ -594,7 +590,7 @@ namespace Content.Server.Disposal.Mailing
                 }
             }
 
-            UserInterface?.CloseAll();
+            Server.UserInterface?.CloseAll();
 
             _automaticEngageToken?.Cancel();
             _automaticEngageToken = null;
@@ -702,7 +698,7 @@ namespace Content.Server.Disposal.Mailing
             {
                 UpdateTargetList();
                 UpdateInterface();
-                UserInterface?.Open(actor.PlayerSession);
+                Server.UserInterface?.Open(actor.PlayerSession);
                 return true;
             }
 
@@ -718,7 +714,7 @@ namespace Content.Server.Disposal.Mailing
 
             if (IsValidInteraction(eventArgs))
             {
-                UserInterface?.Open(actor.PlayerSession);
+                Server.UserInterface?.Open(actor.PlayerSession);
             }
 
             return;

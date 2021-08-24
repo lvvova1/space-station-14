@@ -1,6 +1,5 @@
 ﻿#nullable enable
-using Content.Server.UserInterface;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Body.Scanner;
 using Content.Shared.Interaction;
 using Robust.Server.GameObjects;
@@ -33,10 +32,10 @@ namespace Content.Server.Body.Scanner
             if (session.AttachedEntity.TryGetComponent(out SharedBodyComponent? body))
             {
                 var state = InterfaceState(body);
-                UserInterface?.SetState(state);
+                Server.UserInterface?.SetState(state);
             }
 
-            UserInterface?.Open(session);
+            Server.UserInterface?.Open(session);
         }
 
         public override void Initialize()
@@ -45,9 +44,9 @@ namespace Content.Server.Body.Scanner
 
             Owner.EnsureComponentWarn<ServerUserInterfaceComponent>();
 
-            if (UserInterface != null)
+            if (Server.UserInterface != null)
             {
-                UserInterface.OnReceiveMessage += UserInterfaceOnOnReceiveMessage;
+                Server.UserInterface.OnReceiveMessage += UserInterfaceOnOnReceiveMessage;
             }
         }
 

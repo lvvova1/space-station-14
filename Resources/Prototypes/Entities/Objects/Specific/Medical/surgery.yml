@@ -34,9 +34,8 @@
   description: A surgical tool used to cauterize open wounds.
   components:
   - type: SurgeryTool
-    behavior:
-      !type:Cauterization
-      locId: cauterization
+    steps:
+    - Cauterization
     delay: 3
   - type: Sprite
     sprite: Objects/Specific/Medical/Surgery/cautery.rsi
@@ -55,9 +54,8 @@
   components:
 #  - type: PowerCellSlot
   - type: SurgeryTool
-    behavior:
-      !type:StepSurgery
-      step: Drilling
+    steps:
+    - Drilling
     delay: 3
   - type: Sprite
     sprite: Objects/Specific/Medical/Surgery/drill.rsi
@@ -80,9 +78,8 @@
     types:
     - Knife
   - type: SurgeryTool
-    behavior:
-      !type:StepSurgery
-      step: Incision
+    steps:
+    - Incision
     delay: 5
   - type: Sprite
     sprite: Objects/Specific/Medical/Surgery/scalpel.rsi
@@ -101,9 +98,8 @@
   description: A pointy piece of glass, abraded to an edge and wrapped in tape for a handle. # Could become a decent tool or weapon with right tool mods.
   components:
   - type: SurgeryTool
-    behavior:
-      !type:StepSurgery
-      step: Incision
+    steps:
+    - Incision
     delay: 8
   - type: Sprite
     state: shiv
@@ -117,9 +113,8 @@
   description: Made of more expensive materials, sharper and generally more reliable.
   components:
   - type: SurgeryTool
-    behavior:
-      !type:StepSurgery
-      step: Incision
+    steps:
+    - Incision
     delay: 4
   - type: Sprite
     state: advanced
@@ -134,9 +129,8 @@
   components:
 #  - type: PowerCellSlot
   - type: SurgeryTool
-    behavior:
-      !type:StepSurgery
-      step: Incision
+    steps:
+    - Incision
     delay: 2
   - type: Sprite
     state: laser
@@ -152,9 +146,8 @@
   description: A surgical tool used to hold open incisions.
   components:
   - type: SurgeryTool
-    behavior:
-      !type:StepSurgery
-      step: Retraction
+    steps:
+    - Retraction
     delay: 3
   - type: Sprite
     sprite: Objects/Specific/Medical/Surgery/scissors.rsi
@@ -181,9 +174,8 @@
   description: A surgical tool used to compress blood vessels to prevent bleeding.
   components:
   - type: SurgeryTool
-    behavior:
-      !type:StepSurgery
-      step: VesselCompression
+    steps:
+    - VesselCompression
     delay: 3
   - type: Sprite
     state: hemostat
@@ -215,9 +207,8 @@
     types:
       - Knife
   - type: SurgeryTool
-    behavior:
-      !type:StepSurgery
-      step: Amputation
+    steps:
+    - Amputation
     delay: 6
   - type: Sprite
     sprite: Objects/Specific/Medical/Surgery/saw.rsi
@@ -234,9 +225,8 @@
   description: A wicked serrated blade made of whatever nasty sharp things you could find. # It would make a pretty decent weapon, given there are more space for some tool mods too.
   components:
   - type: SurgeryTool
-    behavior:
-      !type:StepSurgery
-      step: Amputation
+    steps:
+    - Amputation
     delay: 8
   - type: Sprite
     state: improv
@@ -254,9 +244,8 @@
   components:
 #  - type: PowerCellSlot
   - type: SurgeryTool
-    behavior:
-      !type:StepSurgery
-      step: Amputation
+    steps:
+    - Amputation
     delay: 4
   - type: Sprite
     state: electric
@@ -274,9 +263,8 @@
   components:
 #  - type: PowerCellSlot
   - type: SurgeryTool
-    behavior:
-      !type:StepSurgery
-      step: Amputation
+    steps:
+    - Amputation
     delay: 2
   - type: Sprite
     state: advanced

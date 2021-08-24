@@ -2,7 +2,7 @@
 using System.Linq;
 using Content.Server.Administration;
 using Content.Shared.Administration;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Body.Part;
 using Robust.Server.Player;
 using Robust.Shared.Console;

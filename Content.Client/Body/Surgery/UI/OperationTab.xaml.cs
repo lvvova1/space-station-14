@@ -3,7 +3,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.XAML;
 
-namespace Content.Client.Body.UI
+namespace Content.Client.Body.Surgery.UI
 {
     [GenerateTypedNameReferences]
     public partial class OperationTab : Control

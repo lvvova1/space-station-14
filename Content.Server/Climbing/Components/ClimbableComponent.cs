@@ -2,11 +2,10 @@
 using Content.Server.DoAfter;
 using Content.Server.Notification;
 using Content.Shared.ActionBlocker;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Body.Part;
 using Content.Shared.Climbing;
 using Content.Shared.DragDrop;
-using Content.Shared.Interaction.Events;
 using Content.Shared.Interaction.Helpers;
 using Content.Shared.Notification.Managers;
 using Content.Shared.Verbs;
@@ -88,7 +87,7 @@ namespace Content.Server.Climbing.Components
                 return false;
             }
 
-            if (!user.InRangeUnobstructed(target, Range))
+            if (!user.InRangeUnobstructed(target, System.Range))
             {
                 reason = Loc.GetString("comp-climbable-cant-reach");
                 return false;
@@ -122,8 +121,8 @@ namespace Content.Server.Climbing.Components
 
             bool Ignored(IEntity entity) => entity == target || entity == user || entity == dragged;
 
-            if (!user.InRangeUnobstructed(target, Range, predicate: Ignored) ||
-                !user.InRangeUnobstructed(dragged, Range, predicate: Ignored))
+            if (!user.InRangeUnobstructed(target, System.Range, predicate: Ignored) ||
+                !user.InRangeUnobstructed(dragged, System.Range, predicate: Ignored))
             {
                 reason = Loc.GetString("comp-climbable-cant-reach");
                 return false;

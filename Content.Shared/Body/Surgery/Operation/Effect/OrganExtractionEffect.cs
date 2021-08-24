@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Content.Shared.Body.Part;
+﻿using Content.Shared.Body.Part;
 using Content.Shared.Body.Surgery.Surgeon;
 using Content.Shared.Body.Surgery.Target;
 
@@ -9,15 +8,14 @@ namespace Content.Shared.Body.Surgery.Operation.Effect
     {
         public void Execute(SurgeonComponent surgeon, SurgeryTargetComponent target)
         {
-            // TODO BODY choose organ
             if (surgeon.Mechanism == null ||
                 !target.Owner.TryGetComponent(out SharedBodyPartComponent? part) ||
-                part.Mechanisms.FirstOrDefault() is not { } mechanism)
+                !part.HasMechanism(surgeon.Mechanism))
             {
                 return;
             }
 
-            part.RemoveMechanism(mechanism);
+            part.RemoveMechanism(surgeon.Mechanism);
         }
     }
 }

@@ -7,11 +7,9 @@ using Content.Server.Notification;
 using Content.Server.Storage.Components;
 using Content.Server.Tools.Components;
 using Content.Shared.Audio;
-using Content.Shared.Body.Components;
 using Content.Shared.Body.Part;
 using Content.Shared.Examine;
 using Content.Shared.Interaction;
-using Content.Shared.Notification;
 using Content.Shared.Notification.Managers;
 using Content.Shared.Toilet;
 using Content.Shared.Tool;
@@ -25,7 +23,7 @@ using Robust.Shared.Random;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Content.Server.Toilet
+ontent.Server.Toilet
 {
     [RegisterComponent]
     public class ToiletComponent : Component, IInteractUsing,

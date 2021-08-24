@@ -7,7 +7,7 @@ using Content.Server.Body.Behavior;
 using Content.Server.Body.Circulatory;
 using Content.Server.Metabolism;
 using Content.Shared.Atmos;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using NUnit.Framework;
 using Robust.Server.Maps;
 using Robust.Shared.GameObjects;

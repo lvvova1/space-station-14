@@ -1,11 +1,9 @@
 ﻿#nullable enable
-using Content.Shared.Body.Components;
-using Content.Shared.Body.Mechanism;
 using Content.Shared.Body.Part;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager.Attributes;
 
-namespace Content.Shared.Body.Behavior
+namespace Content.Shared.Body.Mechanism
 {
     /// <summary>
     ///     Gives functionality to a mechanism when added to it.

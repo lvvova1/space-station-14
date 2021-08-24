@@ -1,5 +1,5 @@
 ﻿using Content.Client.Cuffs.Components;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Body.Part;
 using Content.Shared.CharacterAppearance;
 using Content.Shared.CharacterAppearance.Components;
@@ -72,11 +72,11 @@ namespace Content.Client.CharacterAppearance
 
             sprite.LayerSetColor(HumanoidVisualLayers.Eyes, Appearance.EyeColor);
 
-            sprite.LayerSetState(HumanoidVisualLayers.Chest, Sex == Sex.Male ? "torso_m" : "torso_f");
-            sprite.LayerSetState(HumanoidVisualLayers.Head, Sex == Sex.Male ? "head_m" : "head_f");
+            sprite.LayerSetState(HumanoidVisualLayers.Chest, Shared.CharacterAppearance.Sex == Sex.Male ? "torso_m" : "torso_f");
+            sprite.LayerSetState(HumanoidVisualLayers.Head, Shared.CharacterAppearance.Sex == Sex.Male ? "head_m" : "head_f");
 
             if (sprite.LayerMapTryGet(HumanoidVisualLayers.StencilMask, out _))
-                sprite.LayerSetVisible(HumanoidVisualLayers.StencilMask, Sex == Sex.Female);
+                sprite.LayerSetVisible(HumanoidVisualLayers.StencilMask, Shared.CharacterAppearance.Sex == Sex.Female);
 
             if (Owner.TryGetComponent<CuffableComponent>(out var cuffed))
             {

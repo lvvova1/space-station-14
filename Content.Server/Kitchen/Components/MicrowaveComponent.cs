@@ -11,7 +11,6 @@ using Content.Server.Items;
 using Content.Server.Notification;
 using Content.Server.Power.Components;
 using Content.Server.UserInterface;
-using Content.Shared.Body.Components;
 using Content.Shared.Body.Part;
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.Reagent;
@@ -20,7 +19,6 @@ using Content.Shared.Chemistry.Solution.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Kitchen;
 using Content.Shared.Kitchen.Components;
-using Content.Shared.Notification;
 using Content.Shared.Notification.Managers;
 using Content.Shared.Power;
 using Robust.Server.GameObjects;
@@ -33,7 +31,7 @@ using Robust.Shared.Player;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Content.Server.Kitchen.Components
+ontent.Server.Kitchen.Components
 {
     [RegisterComponent]
     [ComponentReference(typeof(IActivate))]

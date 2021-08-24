@@ -257,7 +257,6 @@ namespace Content.Client.Entry
             "ExplosionLaunched",
             "BeingCloned",
             "Advertise",
-            "SurgeryTool",
             "SurgeryDrapes",
         };
     }

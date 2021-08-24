@@ -6,6 +6,8 @@
   - Incision
   - Retraction
   - Extraction
+  - id: Incision
+    behavior: !type:MechanismSelection
   effect:
     !type:OrganExtractionEffect
   hidden: true # TODO SURGERY

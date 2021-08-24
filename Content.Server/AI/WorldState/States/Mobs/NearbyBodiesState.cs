@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using Content.Server.AI.Components;
 using Content.Server.AI.Utils;
-using Content.Shared.Body.Components;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 
-namespace Content.Server.AI.WorldState.States.Mobs
+ontent.Server.AI.WorldState.States.Mobs
 {
     [UsedImplicitly]
     public sealed class NearbyBodiesState : CachedStateData<List<IEntity>>

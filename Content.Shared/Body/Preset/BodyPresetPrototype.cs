@@ -1,8 +1,6 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
-using Content.Shared.Body.Components;
-using Content.Shared.Body.Part;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;

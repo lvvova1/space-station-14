@@ -58,7 +58,8 @@ namespace Content.Shared.Body.Surgery.Operation.Step.Serializers
             return new()
             {
                 Id = source.Id,
-                Conditional = source.Conditional
+                Conditional = source.Conditional,
+                Behavior = source.Behavior
             };
         }
 

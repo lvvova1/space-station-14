@@ -7,7 +7,6 @@ using Content.Server.Disposal.Tube.Components;
 using Content.Server.Interfaces;
 using Content.Server.Items;
 using Content.Shared.Atmos;
-using Content.Shared.Body.Components;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -15,7 +14,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Content.Server.Disposal.Unit.Components
+ontent.Server.Disposal.Unit.Components
 {
     // TODO: Add gas
     [RegisterComponent]

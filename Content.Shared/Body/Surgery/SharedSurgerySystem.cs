@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Threading;
-using Content.Shared.Body.Components;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Surgery.Operation;
 using Content.Shared.Body.Surgery.Operation.Messages;
@@ -19,7 +18,7 @@ using Robust.Shared.Prototypes;
 namespace Content.Shared.Body.Surgery
 {
     [UsedImplicitly]
-    public class SharedSurgerySystem : EntitySystem
+    public abstract class SharedSurgerySystem : EntitySystem
     {
         public const string SurgeryLogId = "surgery";
 
@@ -67,7 +66,7 @@ namespace Content.Shared.Body.Surgery
 
         private void OnSurgeonStartedOperation(EntityUid uid, SurgeonComponent surgeon, SurgeonStartedOperation args)
         {
-            args.Target.Surgeon = EntityManager.GetEntity(uid).GetComponent<SurgeonComponent>();
+            args.Target.Surgeon = Robust.Shared.GameObjects.EntityManager.GetEntity(uid).GetComponent<SurgeonComponent>();
             args.Target.Operation = args.Operation;
         }
 
@@ -97,7 +96,7 @@ namespace Content.Shared.Body.Surgery
                     if (!_prototypeManager.HasIndex<SurgeryStepPrototype>(step.Id))
                     {
                         throw new PrototypeLoadException(
-                            $"Invalid {nameof(SurgeryStepPrototype)} found in surgery operation with id {operation.ID}: No step found with id {step}");
+                            $"Invalid {nameof(SurgeryStepPrototype)} found in surgery operation with id {operation.ID}: No step found with id {step.Id}");
                     }
                 }
             }
@@ -218,27 +217,37 @@ namespace Content.Shared.Body.Surgery
             return StopSurgery(surgeon);
         }
 
-        public bool CanAddSurgeryTag(SurgeryTargetComponent target, SurgeryTag tag)
+        public OperationStep? GetNextStep(SurgeryTargetComponent target)
         {
             if (target.Operation == null ||
                 target.Operation.Steps.Count <= target.SurgeryTags.Count)
             {
-                return false;
+                return null;
             }
 
-            var nextStep = target.Operation.Steps[target.SurgeryTags.Count];
-            if (!nextStep.Necessary(target) || nextStep.Id != tag.Id)
-            {
-                return false;
-            }
+            return target.Operation?.Steps[target.SurgeryTags.Count];
+        }
 
-            return true;
+        public bool TryGetNextStep(SurgeryTargetComponent target, [NotNullWhen(true)] out OperationStep? step)
+        {
+            return (step = GetNextStep(target)) != null;
+        }
+
+        public bool CanAddSurgeryTag(SurgeryTargetComponent target, SurgeryTag tag)
+        {
+            // TODO SURGERY fix this for intermediary unnecessary steps
+            return TryGetNextStep(target, out var step) &&
+                   step.Necessary(target) &&
+                   step.Id == tag.Id;
         }
 
         public bool TryAddSurgeryTag(SurgeryTargetComponent target, SurgeryTag tag)
         {
             target.SurgeryTags.Add(tag);
+            target.Dirty();
+
             CheckCompletion(target);
+
             return true;
         }
 
@@ -251,6 +260,8 @@ namespace Content.Shared.Body.Surgery
             }
 
             target.SurgeryTags.RemoveAt(target.SurgeryTags.Count - 1);
+            target.Dirty();
+
             return true;
         }
 
@@ -288,6 +299,8 @@ namespace Content.Shared.Body.Surgery
 
         public virtual void DoBeginPopups(SurgeonComponent surgeon, IEntity target, string id)
         {
+            id = id.ToLowerInvariant();
+
             var targetReceiver = GetPopupReceiver(target);
             DoSurgeonBeginPopup(surgeon.Owner, targetReceiver, target, id);
 
@@ -299,6 +312,8 @@ namespace Content.Shared.Body.Surgery
 
         public void DoSurgeonBeginPopup(IEntity surgeon, IEntity? target, IEntity part, string id)
         {
+            id = id.ToLowerInvariant();
+
             string msg;
 
             if (target == null)
@@ -322,6 +337,8 @@ namespace Content.Shared.Body.Surgery
 
         public void DoTargetBeginPopup(IEntity surgeon, IEntity? target, IEntity part, string id)
         {
+            id = id.ToLowerInvariant();
+
             var locId = $"surgery-step-{id}-begin-target-popup";
             var msg = _loc.GetString(locId, ("user", surgeon), ("part", part));
 
@@ -330,6 +347,8 @@ namespace Content.Shared.Body.Surgery
 
         public virtual void DoSuccessPopups(SurgeonComponent surgeon, IEntity target, string id)
         {
+            id = id.ToLowerInvariant();
+
             var surgeonOwner = surgeon.Owner;
             var bodyOwner = target.GetComponentOrNull<SharedBodyPartComponent>()?.Body?.Owner;
 
@@ -343,6 +362,8 @@ namespace Content.Shared.Body.Surgery
 
         public void DoSurgeonSuccessPopup(IEntity surgeon, IEntity? target, IEntity part, string id)
         {
+            id = id.ToLowerInvariant();
+
             string msg;
 
             if (target == null)
@@ -366,10 +387,64 @@ namespace Content.Shared.Body.Surgery
 
         public void DoTargetSuccessPopup(IEntity surgeon, IEntity? target, IEntity part, string id)
         {
+            id = id.ToLowerInvariant();
+
             var locId = $"surgery-step-{id}-success-target-popup";
             var msg = _loc.GetString(locId, ("user", surgeon), ("part", part));
 
             (target ?? part).PopupMessage(msg);
+        }
+
+        public virtual bool OpenChooseMechanismUI(SurgeonComponent surgeon, SurgeryTargetComponent target)
+        {
+            return false;
+        }
+
+        public bool CanPerform(
+            SurgeonComponent surgeon,
+            SurgeryTargetComponent target,
+            SurgeryToolComponent tool,
+            [NotNullWhen(true)] out OperationStep? step)
+        {
+            if (!TryGetNextStep(target, out step))
+            {
+                return false;
+            }
+
+            var context = new SurgeryStepContext(surgeon, target, tool, this, step);
+            return step.CanPerform(context);
+        }
+
+        public bool CanPerform(
+            SurgeonComponent surgeon,
+            SurgeryTargetComponent target,
+            SurgeryToolComponent tool)
+        {
+            return CanPerform(surgeon, target, tool, out _);
+        }
+
+        public bool TryPerform(
+            SurgeonComponent surgeon,
+            SurgeryTargetComponent target,
+            SurgeryToolComponent tool)
+        {
+            if (!CanPerform(surgeon, target, tool) ||
+                !TryGetNextStep(target, out var step))
+            {
+                return false;
+            }
+
+            var context = new SurgeryStepContext(surgeon, target, tool, this, step);
+            if (step.CanPerform(context) && step.Perform(context))
+            {
+                step.OnPerformSuccess(context);
+                return true;
+            }
+            else
+            {
+                step.OnPerformFail(context);
+                return false;
+            }
         }
     }
 }

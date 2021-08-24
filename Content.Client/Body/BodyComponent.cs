@@ -1,8 +1,8 @@
-﻿using Content.Shared.Body.Components;
+﻿using Content.Shared.Body;
 using Content.Shared.DragDrop;
 using Robust.Shared.GameObjects;
 
-namespace Content.Client.Body.Components
+namespace Content.Client.Body
 {
     [RegisterComponent]
     [ComponentReference(typeof(SharedBodyComponent))]

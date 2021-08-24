@@ -1,7 +1,7 @@
 #nullable enable
 using Content.Server.Administration;
 using Content.Shared.Administration;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;

@@ -8,7 +8,7 @@ using Robust.Client.UserInterface.XAML;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
 
-namespace Content.Client.Body.UI
+namespace Content.Client.Body.Surgery.UI
 {
     [GenerateTypedNameReferences]
     public partial class SurgeryWindow : SS14Window

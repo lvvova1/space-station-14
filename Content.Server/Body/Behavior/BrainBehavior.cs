@@ -2,7 +2,7 @@
 using Content.Server.Ghost;
 using Content.Server.Ghost.Components;
 using Content.Server.Mind.Components;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Body.Part;
 using Content.Shared.Movement.Components;
 using Robust.Shared.GameObjects;

@@ -1,6 +1,5 @@
 ﻿#nullable enable
-using Content.Shared.Body.Behavior;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Body.Mechanism;
 using Content.Shared.Body.Part;
 using Robust.Shared.GameObjects;
@@ -12,7 +11,7 @@ namespace Content.Server.Body.Behavior
     {
         private SharedMechanismComponent _parent = default!;
 
-        public override SharedBodyComponent? Body => Part?.Body;
+        public override SharedBodyComponent? Body => Server.Body.Part?.Body;
 
         public override SharedBodyPartComponent? Part => Parent.Part;
 
@@ -27,18 +26,18 @@ namespace Content.Server.Body.Behavior
 
         public override void Startup()
         {
-            if (Part == null)
+            if (Server.Body.Part == null)
             {
                 return;
             }
 
-            if (Body == null)
+            if (Server.Body == null)
             {
-                AddedToPart(Part);
+                AddedToPart(Server.Body.Part);
             }
             else
             {
-                AddedToPartInBody(Body, Part);
+                AddedToPartInBody(Server.Body, Server.Body.Part);
             }
         }
 
@@ -46,7 +45,7 @@ namespace Content.Server.Body.Behavior
 
         public override void AddedToBody(SharedBodyComponent body)
         {
-            DebugTools.AssertNotNull(Body);
+            DebugTools.AssertNotNull(Server.Body);
             DebugTools.AssertNotNull(body);
 
             OnAddedToBody(body);
@@ -54,7 +53,7 @@ namespace Content.Server.Body.Behavior
 
         public override void AddedToPart(SharedBodyPartComponent part)
         {
-            DebugTools.AssertNotNull(Part);
+            DebugTools.AssertNotNull(Server.Body.Part);
             DebugTools.AssertNotNull(part);
 
             OnAddedToPart(part);
@@ -62,9 +61,9 @@ namespace Content.Server.Body.Behavior
 
         public override void AddedToPartInBody(SharedBodyComponent body, SharedBodyPartComponent part)
         {
-            DebugTools.AssertNotNull(Body);
+            DebugTools.AssertNotNull(Server.Body);
             DebugTools.AssertNotNull(body);
-            DebugTools.AssertNotNull(Part);
+            DebugTools.AssertNotNull(Server.Body.Part);
             DebugTools.AssertNotNull(part);
 
             OnAddedToPartInBody(body, part);
@@ -72,7 +71,7 @@ namespace Content.Server.Body.Behavior
 
         public override void RemovedFromBody(SharedBodyComponent old)
         {
-            DebugTools.AssertNull(Body);
+            DebugTools.AssertNull(Server.Body);
             DebugTools.AssertNotNull(old);
 
             OnRemovedFromBody(old);
@@ -80,7 +79,7 @@ namespace Content.Server.Body.Behavior
 
         public override void RemovedFromPart(SharedBodyPartComponent old)
         {
-            DebugTools.AssertNull(Part);
+            DebugTools.AssertNull(Server.Body.Part);
             DebugTools.AssertNotNull(old);
 
             OnRemovedFromPart(old);
@@ -88,8 +87,8 @@ namespace Content.Server.Body.Behavior
 
         public override void RemovedFromPartInBody(SharedBodyComponent oldBody, SharedBodyPartComponent oldPart)
         {
-            DebugTools.AssertNull(Body);
-            DebugTools.AssertNull(Part);
+            DebugTools.AssertNull(Server.Body);
+            DebugTools.AssertNull(Server.Body.Part);
             DebugTools.AssertNotNull(oldBody);
             DebugTools.AssertNotNull(oldPart);
 

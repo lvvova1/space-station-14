@@ -3,12 +3,13 @@ using Content.Server.GameTicking;
 using Content.Server.Ghost;
 using Content.Server.Mind.Components;
 using Content.Shared.Audio;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Slot;
 using Content.Shared.MobState;
 using Content.Shared.Movement.Components;
 using Content.Shared.Random.Helpers;
+using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -24,8 +25,11 @@ namespace Content.Server.Body
     [ComponentReference(typeof(IGhostOnMove))]
     public class BodyComponent : SharedBodyComponent, IRelayMoveInput, IGhostOnMove
     {
-        private Container _partContainer = default!;
         [Dependency] private readonly IGameTicker _gameTicker = default!;
+
+        private Container _partContainer = default!;
+
+        public BoundUserInterface? MechanismSelectionUI => Owner.GetUIOrNull(MechanismsUIKey.Key);
 
         protected override bool CanAddPart(string slotId, SharedBodyPartComponent part)
         {

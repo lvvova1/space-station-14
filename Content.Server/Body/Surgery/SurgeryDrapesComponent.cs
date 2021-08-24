@@ -4,7 +4,7 @@ using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.ViewVariables;
 
-namespace Content.Server.Body.Surgery.Tool
+namespace Content.Server.Body.Surgery
 {
     [RegisterComponent]
     public class SurgeryDrapesComponent : Component

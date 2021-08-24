@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Content.Server.Body.Surgery;
-using Content.Server.Body.Surgery.Tool;
 using Content.Shared.Body.Surgery;
 using Content.Shared.Body.Surgery.Operation;
 using Content.Shared.Body.Surgery.Operation.Effect;
@@ -29,6 +28,10 @@ namespace Content.IntegrationTests.Tests.Surgery
             SurgeryToolComponent correct,
             params SurgeryToolComponent[] all)
         {
+            var surgerySystem = EntitySystem.Get<SharedSurgerySystem>();
+            var nextStep = surgerySystem.GetNextStep(target);
+            Assert.NotNull(nextStep);
+
             foreach (var tool in all)
             {
                 if (tool == correct)
@@ -36,12 +39,12 @@ namespace Content.IntegrationTests.Tests.Surgery
                     continue;
                 }
 
-                Assert.False(tool.Behavior!.CanPerform(surgeon, target));
-                Assert.False(tool.Behavior!.Perform(surgeon, target));
+                Assert.False(surgerySystem.CanPerform(surgeon, target, tool));
+                Assert.False(surgerySystem.TryPerform(surgeon, target, tool));
             }
 
-            Assert.True(correct.Behavior!.CanPerform(surgeon, target));
-            Assert.True(correct.Behavior!.Perform(surgeon, target));
+            Assert.True(surgerySystem.CanPerform(surgeon, target, correct));
+            Assert.True(surgerySystem.TryPerform(surgeon, target, correct));
         }
 
         [Test]
@@ -77,7 +80,7 @@ namespace Content.IntegrationTests.Tests.Surgery
 
                 var coordinates = sPlayer!.Transform.Coordinates;
                 var sTarget = sEntityManager.SpawnEntity(null, coordinates);
-                sSurgeryTargetComp = sTarget.EnsureComponent<SurgeryTargetComponent>();
+                sSurgeryTargetComp = sTarget.GetComponent<SurgeryTargetComponent>();
 
                 var sDrapes = sEntityManager.SpawnEntity(DrapesDummyId, coordinates);
                 sDrapesComp = sDrapes.GetComponent<SurgeryDrapesComponent>();
@@ -174,9 +177,12 @@ namespace Content.IntegrationTests.Tests.Surgery
 
             await server.WaitAssertion(() =>
             {
+                var nextStep = sSurgerySystem.GetNextStep(sSurgeryTargetComp);
+                Assert.Null(nextStep);
+
                 // No operation underway, cauterization fails
-                Assert.False(sCauterizationComp.Behavior!.CanPerform(sSurgeonComp, sSurgeryTargetComp));
-                Assert.False(sCauterizationComp.Behavior!.Perform(sSurgeonComp, sSurgeryTargetComp));
+                Assert.False(sSurgerySystem.CanPerform(sSurgeonComp, sSurgeryTargetComp, sCauterizationComp));
+                Assert.False(sSurgerySystem.TryPerform(sSurgeonComp, sSurgeryTargetComp, sCauterizationComp));
 
                 // Try to start an amputation operation, succeeds
                 Assert.True(sSurgerySystem.TryUseDrapes(sDrapesComp, sSurgeonComp, sSurgeryTargetComp, sAmputationOperation));
@@ -188,8 +194,8 @@ namespace Content.IntegrationTests.Tests.Surgery
                 Assert.NotNull(sSurgeonComp.SurgeryCancellation);
 
                 // Operation underway, cauterization succeeds
-                Assert.True(sCauterizationComp.Behavior.CanPerform(sSurgeonComp, sSurgeryTargetComp));
-                Assert.True(sCauterizationComp.Behavior.Perform(sSurgeonComp, sSurgeryTargetComp));
+                Assert.True(sSurgerySystem.CanPerform(sSurgeonComp, sSurgeryTargetComp, sCauterizationComp));
+                Assert.True(sSurgerySystem.TryPerform(sSurgeonComp, sSurgeryTargetComp, sCauterizationComp));
 
                 Assert.Null(sSurgeonComp.Target);
                 Assert.Null(sSurgeonComp.Mechanism);

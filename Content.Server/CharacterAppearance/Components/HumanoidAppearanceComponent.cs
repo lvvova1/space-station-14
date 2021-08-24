@@ -1,10 +1,9 @@
-using Content.Shared.Body.Components;
 using Content.Shared.CharacterAppearance;
 using Content.Shared.CharacterAppearance.Components;
 using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 
-namespace Content.Server.CharacterAppearance.Components
+ontent.Server.CharacterAppearance.Components
 {
     [RegisterComponent]
     public sealed class HumanoidAppearanceComponent : SharedHumanoidAppearanceComponent

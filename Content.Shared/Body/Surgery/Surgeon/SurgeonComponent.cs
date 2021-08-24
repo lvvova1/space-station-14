@@ -1,5 +1,4 @@
 ﻿using System.Threading;
-using Content.Shared.Body.Components;
 using Content.Shared.Body.Mechanism;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Surgery.Target;
@@ -7,7 +6,7 @@ using Content.Shared.NetIDs;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Players;
 
-namespace Content.Shared.Body.Surgery.Surgeon
+Surgeon
 {
     [RegisterComponent]
     public class SurgeonComponent : Component
@@ -21,31 +20,13 @@ namespace Content.Shared.Body.Surgery.Surgeon
         public SurgeryTargetComponent? Target
         {
             get => _target;
-            set
-            {
-                if (_target == value)
-                {
-                    return;
-                }
-
-                _target = value;
-                Dirty();
-            }
+            set => this.SetAndDirtyIfChanged(ref _target, value);
         }
 
         public SharedMechanismComponent? Mechanism
         {
             get => _mechanism;
-            set
-            {
-                if (_mechanism == value)
-                {
-                    return;
-                }
-
-                _mechanism = value;
-                Dirty();
-            }
+            set => this.SetAndDirtyIfChanged(ref _mechanism, value);
         }
 
         public CancellationTokenSource? SurgeryCancellation { get; set; }
@@ -71,7 +52,7 @@ namespace Content.Shared.Body.Surgery.Surgeon
 
             _target = state.Target == null
                 ? null
-                : Owner.EntityManager.GetEntity(state.Target.Value).EnsureComponent<SurgeryTargetComponent>();
+                : Owner.EntityManager.GetEntity(state.Target.Value).GetComponent<SurgeryTargetComponent>();
         }
     }
 }

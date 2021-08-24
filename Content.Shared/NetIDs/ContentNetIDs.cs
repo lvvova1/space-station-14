@@ -99,6 +99,7 @@ namespace Content.Shared.NetIDs
         public const uint LIGHT_REPLACER = 1090;
         public const uint SURGEON = 1091;
         public const uint SURGERY_TARGET = 1092;
+        public const uint SURGERY_TOOL = 1093;
 
         // Net IDs for integration tests.
         public const uint PREDICTION_TEST = 10001;

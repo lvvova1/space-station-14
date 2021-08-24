@@ -7,11 +7,9 @@ using Content.Server.Placeable;
 using Content.Server.Tools.Components;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Acts;
-using Content.Shared.Body.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Item;
 using Content.Shared.Movement;
-using Content.Shared.Notification;
 using Content.Shared.Notification.Managers;
 using Content.Shared.Physics;
 using Content.Shared.Storage;
@@ -30,7 +28,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
-namespace Content.Server.Storage.Components
+ontent.Server.Storage.Components
 {
     [RegisterComponent]
     [ComponentReference(typeof(IActivate))]

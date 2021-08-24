@@ -1,6 +1,6 @@
 ﻿#nullable enable
 using System;
-using Content.Shared.Body.Components;
+using Content.Shared.Body;
 using Content.Shared.Damage.Components;
 
 namespace Content.Shared.Damage

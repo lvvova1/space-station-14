@@ -8,7 +8,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.ViewVariables;
 
-namespace Content.Client.Body.UI
+namespace Content.Client.Body.Surgery.UI
 {
     [UsedImplicitly]
     public class SurgeryBoundUserInterface : BoundUserInterface

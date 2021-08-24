@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -25,13 +26,24 @@ namespace Content.Shared.Body.Surgery.Operation.Step.Serializers
 
             foreach (var dataNode in node.Sequence)
             {
-                if (dataNode is not ValueDataNode value)
+                switch (dataNode)
                 {
-                    list.Add(new ErrorNode(dataNode, $"Cannot cast node {dataNode} to ValueDataNode."));
-                    continue;
+                    case ValueDataNode value:
+                    {
+                        list.Add(_operationStepSerializer.Validate(serializationManager, value, dependencies, context));
+                        break;
+                    }
+                    case MappingDataNode mapping:
+                    {
+                        list.Add(_operationStepSerializer.Validate(serializationManager, mapping, dependencies, context));
+                        break;
+                    }
+                    default:
+                    {
+                        list.Add(new ErrorNode(dataNode, $"Cannot cast node {dataNode} to {nameof(ValueDataNode)} or {nameof(MappingDataNode)}."));
+                        continue;
+                    }
                 }
-
-                list.Add(_operationStepSerializer.Validate(serializationManager, value, dependencies, context));
             }
 
             return new ValidatedSequenceNode(list);
